@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jose Parreno Garcia" />
+
+
+<title>Association analysis and sequence mining</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Association rules</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Association rules</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Association analysis and sequence mining</h1>
+<h4 class="author"><em>Jose Parreno Garcia</em></h4>
+<h4 class="date"><em>February 2018</em></h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#transforming-data-into-transactions"><span class="toc-section-number">1</span> Transforming data into transactions</a><ul>
+<li><a href="#transforming-list-into-transactions"><span class="toc-section-number">1.1</span> Transforming list into transactions</a></li>
+<li><a href="#transforming-matrix-into-transactions"><span class="toc-section-number">1.2</span> Transforming matrix into transactions</a></li>
+<li><a href="#transforming-dataframe-into-transactions"><span class="toc-section-number">1.3</span> Transforming dataframe into transactions</a></li>
+</ul></li>
+<li><a href="#displaying-transactions-and-associations"><span class="toc-section-number">2</span> Displaying transactions and associations</a></li>
+<li><a href="#mining-associations-with-the-apriori-rule"><span class="toc-section-number">3</span> Mining associations with the apriori rule</a></li>
+<li><a href="#pruning-redundant-rules"><span class="toc-section-number">4</span> Pruning redundant rules</a></li>
+<li><a href="#visualizing-association-rules"><span class="toc-section-number">5</span> Visualizing association rules</a></li>
+<li><a href="#mining-frequent-itemsets-with-eclat"><span class="toc-section-number">6</span> Mining frequent itemsets with Eclat</a></li>
+<li><a href="#creating-transactions-with-temporal-information"><span class="toc-section-number">7</span> Creating transactions with temporal information</a></li>
+<li><a href="#mining-frequent-sequential-patterns-with-cspade"><span class="toc-section-number">8</span> Mining frequent sequential patterns with cSPADE</a></li>
+</ul>
+</div>
+
+<style>
+body {
+text-align: justify}
+
+</style>
+<p><br></p>
+<pre class="r"><code>library(knitr)</code></pre>
+<p><br></p>
+<p>We will look at:</p>
+<ul>
+<li>Transforming data into transactions</li>
+<li>Displaying transactions and associations</li>
+<li>Mining associations with the apriori rule</li>
+<li>Pruning redundant rules</li>
+<li>Visualizing association rules</li>
+<li>Mining frequent itemsets with Eclat</li>
+<li>Creating transactions with temporal information</li>
+<li>Mining frequent sequential patterns with cSPADE</li>
+</ul>
+<p><br></p>
+<div id="transforming-data-into-transactions" class="section level1">
+<h1><span class="header-section-number">1</span> Transforming data into transactions</h1>
+<div id="transforming-list-into-transactions" class="section level2">
+<h2><span class="header-section-number">1.1</span> Transforming list into transactions</h2>
+<pre class="r"><code>library(arules)
+
+# IMAGINE WE HAVE 3 DATASETS OF 3 DIFFERENT PURCHASE RECORDS
+tr_list = list(c(&quot;Apple&quot;, &quot;Bread&quot;, &quot;Cake&quot;),
+               c(&quot;Apple&quot;, &quot;Bread&quot;, &quot;Milk&quot;),
+               c(&quot;Bread&quot;, &quot;Cake&quot;, &quot;Milk&quot;))
+names(tr_list) = paste(&quot;Tr&quot;,c(1:3), sep = &quot;&quot;)
+tr_list</code></pre>
+<pre><code>## $Tr1
+## [1] &quot;Apple&quot; &quot;Bread&quot; &quot;Cake&quot; 
+## 
+## $Tr2
+## [1] &quot;Apple&quot; &quot;Bread&quot; &quot;Milk&quot; 
+## 
+## $Tr3
+## [1] &quot;Bread&quot; &quot;Cake&quot;  &quot;Milk&quot;</code></pre>
+<pre class="r"><code>trans = as(tr_list, &quot;transactions&quot;)
+trans</code></pre>
+<pre><code>## transactions in sparse format with
+##  3 transactions (rows) and
+##  4 items (columns)</code></pre>
+</div>
+<div id="transforming-matrix-into-transactions" class="section level2">
+<h2><span class="header-section-number">1.2</span> Transforming matrix into transactions</h2>
+<pre class="r"><code>tr_matrix = matrix(
+                c(1,1,1,0, 
+                  1,1,0,1, 
+                  0,1,1,1), ncol = 4)
+
+dimnames(tr_matrix) = list(
+   paste(&quot;Tr&quot;,c(1:3), sep = &quot;&quot;),c(&quot;Apple&quot;,&quot;Bread&quot;,&quot;Cake&quot;, &quot;Milk&quot;))
+
+trans2 = as(tr_matrix, &quot;transactions&quot;)
+trans2</code></pre>
+<pre><code>## transactions in sparse format with
+##  3 transactions (rows) and
+##  4 items (columns)</code></pre>
+</div>
+<div id="transforming-dataframe-into-transactions" class="section level2">
+<h2><span class="header-section-number">1.3</span> Transforming dataframe into transactions</h2>
+<pre class="r"><code>Tr_df = data.frame(
+   TrID= as.factor(c(1,2,1,1,2,3,2,3,2,3)),
+   Item = as.factor(c(&quot;Apple&quot;,&quot;Milk&quot;,&quot;Cake&quot;,&quot;Bread&quot;,
+                       &quot;Cake&quot;,&quot;Milk&quot;,&quot;Apple&quot;,&quot;Cake&quot;,
+                       &quot;Bread&quot;,&quot;Bread&quot;))
+   )
+trans3 = as(split(Tr_df[,&quot;Item&quot;], Tr_df[,&quot;TrID&quot;]),&quot;transactions&quot;)
+trans3</code></pre>
+<pre><code>## transactions in sparse format with
+##  3 transactions (rows) and
+##  4 items (columns)</code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="displaying-transactions-and-associations" class="section level1">
+<h1><span class="header-section-number">2</span> Displaying transactions and associations</h1>
+<pre class="r"><code>LIST(trans)</code></pre>
+<pre><code>## $Tr1
+## [1] &quot;Apple&quot; &quot;Bread&quot; &quot;Cake&quot; 
+## 
+## $Tr2
+## [1] &quot;Apple&quot; &quot;Bread&quot; &quot;Milk&quot; 
+## 
+## $Tr3
+## [1] &quot;Bread&quot; &quot;Cake&quot;  &quot;Milk&quot;</code></pre>
+<pre class="r"><code>summary(trans)</code></pre>
+<pre><code>## transactions as itemMatrix in sparse format with
+##  3 rows (elements/itemsets/transactions) and
+##  4 columns (items) and a density of 0.75 
+## 
+## most frequent items:
+##   Bread   Apple    Cake    Milk (Other) 
+##       3       2       2       2       0 
+## 
+## element (itemset/transaction) length distribution:
+## sizes
+## 3 
+## 3 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       3       3       3       3       3       3 
+## 
+## includes extended item information - examples:
+##   labels
+## 1  Apple
+## 2  Bread
+## 3   Cake
+## 
+## includes extended transaction information - examples:
+##   transactionID
+## 1           Tr1
+## 2           Tr2
+## 3           Tr3</code></pre>
+<pre class="r"><code>inspect(trans)</code></pre>
+<pre><code>##     items              transactionID
+## [1] {Apple,Bread,Cake} Tr1          
+## [2] {Apple,Bread,Milk} Tr2          
+## [3] {Bread,Cake,Milk}  Tr3</code></pre>
+<pre class="r"><code>filter_trains = trans[size(trans) &gt;=3]
+inspect(filter_trains)</code></pre>
+<pre><code>##     items              transactionID
+## [1] {Apple,Bread,Cake} Tr1          
+## [2] {Apple,Bread,Milk} Tr2          
+## [3] {Bread,Cake,Milk}  Tr3</code></pre>
+<pre class="r"><code>image(trans)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-90-1.png" /><!-- --></p>
+<pre class="r"><code>itemFrequencyPlot (trans)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-90-2.png" /><!-- --></p>
+<p><br></p>
+</div>
+<div id="mining-associations-with-the-apriori-rule" class="section level1">
+<h1><span class="header-section-number">3</span> Mining associations with the apriori rule</h1>
+<p><img src="images/1.PNG" width="729" /><img src="images/2.PNG" width="759" /><img src="images/3.PNG" width="753" /><img src="images/4.PNG" width="738" /></p>
+<pre class="r"><code>data(Groceries)
+
+summary(Groceries)</code></pre>
+<pre><code>## transactions as itemMatrix in sparse format with
+##  9835 rows (elements/itemsets/transactions) and
+##  169 columns (items) and a density of 0.02609146 
+## 
+## most frequent items:
+##       whole milk other vegetables       rolls/buns             soda           yogurt          (Other) 
+##             2513             1903             1809             1715             1372            34055 
+## 
+## element (itemset/transaction) length distribution:
+## sizes
+##    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   26   27   28   29   32 
+## 2159 1643 1299 1005  855  645  545  438  350  246  182  117   78   77   55   46   29   14   14    9   11    4    6    1    1    1    1    3    1 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   1.000   2.000   3.000   4.409   6.000  32.000 
+## 
+## includes extended item information - examples:
+##        labels  level2           level1
+## 1 frankfurter sausage meat and sausage
+## 2     sausage sausage meat and sausage
+## 3  liver loaf sausage meat and sausage</code></pre>
+<pre class="r"><code>itemFrequencyPlot(Groceries, support = 0.1, cex.names=0.8,topN=5)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-92-1.png" /><!-- --></p>
+<pre class="r"><code>rules = apriori(Groceries, parameter = list(supp = 0.001, conf = 0.5, target= &quot;rules&quot;))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen maxlen target   ext
+##         0.5    0.1    1 none FALSE            TRUE       5   0.001      1     10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 9 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[169 item(s), 9835 transaction(s)] done [0.08s].
+## sorting and recoding items ... [157 item(s)] done [0.00s].
+## creating transaction tree ... done [0.11s].
+## checking subsets of size 1 2 3 4 5 6 done [0.38s].
+## writing ... [5668 rule(s)] done [0.07s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>summary(rules)</code></pre>
+<pre><code>## set of 5668 rules
+## 
+## rule length distribution (lhs + rhs):sizes
+##    2    3    4    5    6 
+##   11 1461 3211  939   46 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    2.00    3.00    4.00    3.92    4.00    6.00 
+## 
+## summary of quality measures:
+##     support           confidence          lift            count      
+##  Min.   :0.001017   Min.   :0.5000   Min.   : 1.957   Min.   : 10.0  
+##  1st Qu.:0.001118   1st Qu.:0.5455   1st Qu.: 2.464   1st Qu.: 11.0  
+##  Median :0.001322   Median :0.6000   Median : 2.899   Median : 13.0  
+##  Mean   :0.001668   Mean   :0.6250   Mean   : 3.262   Mean   : 16.4  
+##  3rd Qu.:0.001729   3rd Qu.:0.6842   3rd Qu.: 3.691   3rd Qu.: 17.0  
+##  Max.   :0.022267   Max.   :1.0000   Max.   :18.996   Max.   :219.0  
+## 
+## mining info:
+##       data ntransactions support confidence
+##  Groceries          9835   0.001        0.5</code></pre>
+<pre class="r"><code>inspect(head(rules))</code></pre>
+<pre><code>##     lhs                    rhs          support     confidence lift     count
+## [1] {honey}             =&gt; {whole milk} 0.001118454 0.7333333  2.870009 11   
+## [2] {tidbits}           =&gt; {rolls/buns} 0.001220132 0.5217391  2.836542 12   
+## [3] {cocoa drinks}      =&gt; {whole milk} 0.001321810 0.5909091  2.312611 13   
+## [4] {pudding powder}    =&gt; {whole milk} 0.001321810 0.5652174  2.212062 13   
+## [5] {cooking chocolate} =&gt; {whole milk} 0.001321810 0.5200000  2.035097 13   
+## [6] {cereals}           =&gt; {whole milk} 0.003660397 0.6428571  2.515917 36</code></pre>
+<pre class="r"><code>rules=sort(rules, by=&quot;confidence&quot;, decreasing=TRUE)
+inspect(head(rules))</code></pre>
+<pre><code>##     lhs                                           rhs                support     confidence lift     count
+## [1] {rice,sugar}                               =&gt; {whole milk}       0.001220132 1          3.913649 12   
+## [2] {canned fish,hygiene articles}             =&gt; {whole milk}       0.001118454 1          3.913649 11   
+## [3] {root vegetables,butter,rice}              =&gt; {whole milk}       0.001016777 1          3.913649 10   
+## [4] {root vegetables,whipped/sour cream,flour} =&gt; {whole milk}       0.001728521 1          3.913649 17   
+## [5] {butter,soft cheese,domestic eggs}         =&gt; {whole milk}       0.001016777 1          3.913649 10   
+## [6] {citrus fruit,root vegetables,soft cheese} =&gt; {other vegetables} 0.001016777 1          5.168156 10</code></pre>
+<pre class="r"><code>head(interestMeasure(rules, c(&quot;support&quot;, &quot;chiSquare&quot;, &quot;confidence&quot;,
+                              &quot;conviction&quot;,&quot;cosine&quot;, &quot;coverage&quot;, 
+                              &quot;leverage&quot;, &quot;lift&quot;,&quot;oddsRatio&quot;),Groceries))</code></pre>
+<pre><code>##       support chiSquared confidence conviction     cosine    coverage     leverage     lift oddsRatio
+## 1 0.001220132   35.00650          1         NA 0.06910260 0.001220132 0.0009083689 3.913649        NA
+## 2 0.001118454   32.08603          1         NA 0.06616070 0.001118454 0.0008326715 3.913649        NA
+## 3 0.001016777   29.16615          1         NA 0.06308175 0.001016777 0.0007569741 3.913649        NA
+## 4 0.001728521   49.61780          1         NA 0.08224854 0.001728521 0.0012868559 3.913649        NA
+## 5 0.001016777   29.16615          1         NA 0.06308175 0.001016777 0.0007569741 3.913649        NA
+## 6 0.001016777   41.72398          1         NA 0.07249042 0.001016777 0.0008200380 5.168156        NA</code></pre>
+<p><br></p>
+</div>
+<div id="pruning-redundant-rules" class="section level1">
+<h1><span class="header-section-number">4</span> Pruning redundant rules</h1>
+<pre class="r"><code>rules.sorted = sort(rules, by=&quot;lift&quot;)
+subset.matrix = is.subset(rules.sorted, rules.sorted)
+subset.matrix[lower.tri(subset.matrix, diag=T)] = NA</code></pre>
+<pre><code>## Warning in `[&lt;-`(`*tmp*`, as.vector(i), value = NA): x[.] &lt;- val: x is &quot;ngTMatrix&quot;, val not in {TRUE, FALSE} is coerced; NA |--&gt; TRUE.</code></pre>
+<pre class="r"><code>redundant = colSums(subset.matrix, na.rm=T) &gt;= 1
+head(redundant)</code></pre>
+<pre><code>##                     {hamburger meat,Instant food products,soda}                                      {soda,salty snack,popcorn}                                     {flour,sugar,baking powder} 
+##                                                            TRUE                                                            TRUE                                                            TRUE 
+##                              {ham,processed cheese,white bread}               {hamburger meat,whole milk,Instant food products} {other vegetables,curd,yogurt,whipped/sour cream,cream cheese } 
+##                                                            TRUE                                                            TRUE                                                            TRUE</code></pre>
+<p><br></p>
+</div>
+<div id="visualizing-association-rules" class="section level1">
+<h1><span class="header-section-number">5</span> Visualizing association rules</h1>
+<pre class="r"><code># install.packages(&quot;arulesViz&quot;)
+library(arulesViz)
+
+rules.pruned = rules.sorted
+plot(rules.pruned)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-94-1.png" /><!-- --></p>
+<pre class="r"><code># this plot is to prevent points falling on top of each other
+plot(rules.pruned, shading=&quot;order&quot;, control=list(jitter=6))</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-94-2.png" /><!-- --></p>
+<pre class="r"><code># plotting only the soda rula 
+soda_rule = apriori(data=Groceries, parameter=list(supp=0.001,
+                   conf= 0.1), appearance = list(default=&quot;rhs&quot;,lhs=&quot;soda&quot;))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen maxlen target   ext
+##         0.1    0.1    1 none FALSE            TRUE       5   0.001      1     10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 9 
+## 
+## set item appearances ...[1 item(s)] done [0.00s].
+## set transactions ...[169 item(s), 9835 transaction(s)] done [0.00s].
+## sorting and recoding items ... [157 item(s)] done [0.00s].
+## creating transaction tree ... done [0.01s].
+## checking subsets of size 1 2 done [0.00s].
+## writing ... [18 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code># plot the rule
+plot(sort(soda_rule, by=&quot;lift&quot;), method=&quot;graph&quot;,control=list(type=&quot;items&quot;))</code></pre>
+<pre><code>## Warning: Unknown control parameters: type</code></pre>
+<pre><code>## Available control parameters (with default values):
+## main  =  Graph for 18 rules
+## nodeColors    =  c(&quot;#66CC6680&quot;, &quot;#9999CC80&quot;)
+## nodeCol   =  c(&quot;#EE0000FF&quot;, &quot;#EE0303FF&quot;, &quot;#EE0606FF&quot;, &quot;#EE0909FF&quot;, &quot;#EE0C0CFF&quot;, &quot;#EE0F0FFF&quot;, &quot;#EE1212FF&quot;, &quot;#EE1515FF&quot;, &quot;#EE1818FF&quot;, &quot;#EE1B1BFF&quot;, &quot;#EE1E1EFF&quot;, &quot;#EE2222FF&quot;, &quot;#EE2525FF&quot;, &quot;#EE2828FF&quot;, &quot;#EE2B2BFF&quot;, &quot;#EE2E2EFF&quot;, &quot;#EE3131FF&quot;, &quot;#EE3434FF&quot;, &quot;#EE3737FF&quot;, &quot;#EE3A3AFF&quot;, &quot;#EE3D3DFF&quot;, &quot;#EE4040FF&quot;, &quot;#EE4444FF&quot;, &quot;#EE4747FF&quot;, &quot;#EE4A4AFF&quot;, &quot;#EE4D4DFF&quot;, &quot;#EE5050FF&quot;, &quot;#EE5353FF&quot;, &quot;#EE5656FF&quot;, &quot;#EE5959FF&quot;, &quot;#EE5C5CFF&quot;, &quot;#EE5F5FFF&quot;, &quot;#EE6262FF&quot;, &quot;#EE6666FF&quot;, &quot;#EE6969FF&quot;, &quot;#EE6C6CFF&quot;, &quot;#EE6F6FFF&quot;, &quot;#EE7272FF&quot;, &quot;#EE7575FF&quot;,  &quot;#EE7878FF&quot;, &quot;#EE7B7BFF&quot;, &quot;#EE7E7EFF&quot;, &quot;#EE8181FF&quot;, &quot;#EE8484FF&quot;, &quot;#EE8888FF&quot;, &quot;#EE8B8BFF&quot;, &quot;#EE8E8EFF&quot;, &quot;#EE9191FF&quot;, &quot;#EE9494FF&quot;, &quot;#EE9797FF&quot;, &quot;#EE9999FF&quot;, &quot;#EE9B9BFF&quot;, &quot;#EE9D9DFF&quot;, &quot;#EE9F9FFF&quot;, &quot;#EEA0A0FF&quot;, &quot;#EEA2A2FF&quot;, &quot;#EEA4A4FF&quot;, &quot;#EEA5A5FF&quot;, &quot;#EEA7A7FF&quot;, &quot;#EEA9A9FF&quot;, &quot;#EEABABFF&quot;, &quot;#EEACACFF&quot;, &quot;#EEAEAEFF&quot;, &quot;#EEB0B0FF&quot;, &quot;#EEB1B1FF&quot;, &quot;#EEB3B3FF&quot;, &quot;#EEB5B5FF&quot;, &quot;#EEB7B7FF&quot;, &quot;#EEB8B8FF&quot;, &quot;#EEBABAFF&quot;, &quot;#EEBCBCFF&quot;, &quot;#EEBDBDFF&quot;, &quot;#EEBFBFFF&quot;, &quot;#EEC1C1FF&quot;, &quot;#EEC3C3FF&quot;, &quot;#EEC4C4FF&quot;, &quot;#EEC6C6FF&quot;, &quot;#EEC8C8FF&quot;,  &quot;#EEC9C9FF&quot;, &quot;#EECBCBFF&quot;, &quot;#EECDCDFF&quot;, &quot;#EECFCFFF&quot;, &quot;#EED0D0FF&quot;, &quot;#EED2D2FF&quot;, &quot;#EED4D4FF&quot;, &quot;#EED5D5FF&quot;, &quot;#EED7D7FF&quot;, &quot;#EED9D9FF&quot;, &quot;#EEDBDBFF&quot;, &quot;#EEDCDCFF&quot;, &quot;#EEDEDEFF&quot;, &quot;#EEE0E0FF&quot;, &quot;#EEE1E1FF&quot;, &quot;#EEE3E3FF&quot;, &quot;#EEE5E5FF&quot;, &quot;#EEE7E7FF&quot;, &quot;#EEE8E8FF&quot;, &quot;#EEEAEAFF&quot;, &quot;#EEECECFF&quot;, &quot;#EEEEEEFF&quot;)
+## edgeCol   =  c(&quot;#474747FF&quot;, &quot;#494949FF&quot;, &quot;#4B4B4BFF&quot;, &quot;#4D4D4DFF&quot;, &quot;#4F4F4FFF&quot;, &quot;#515151FF&quot;, &quot;#535353FF&quot;, &quot;#555555FF&quot;, &quot;#575757FF&quot;, &quot;#595959FF&quot;, &quot;#5B5B5BFF&quot;, &quot;#5E5E5EFF&quot;, &quot;#606060FF&quot;, &quot;#626262FF&quot;, &quot;#646464FF&quot;, &quot;#666666FF&quot;, &quot;#686868FF&quot;, &quot;#6A6A6AFF&quot;, &quot;#6C6C6CFF&quot;, &quot;#6E6E6EFF&quot;, &quot;#707070FF&quot;, &quot;#727272FF&quot;, &quot;#747474FF&quot;, &quot;#767676FF&quot;, &quot;#787878FF&quot;, &quot;#7A7A7AFF&quot;, &quot;#7C7C7CFF&quot;, &quot;#7E7E7EFF&quot;, &quot;#808080FF&quot;, &quot;#828282FF&quot;, &quot;#848484FF&quot;, &quot;#868686FF&quot;, &quot;#888888FF&quot;, &quot;#8A8A8AFF&quot;, &quot;#8C8C8CFF&quot;, &quot;#8D8D8DFF&quot;, &quot;#8F8F8FFF&quot;, &quot;#919191FF&quot;, &quot;#939393FF&quot;,  &quot;#959595FF&quot;, &quot;#979797FF&quot;, &quot;#999999FF&quot;, &quot;#9A9A9AFF&quot;, &quot;#9C9C9CFF&quot;, &quot;#9E9E9EFF&quot;, &quot;#A0A0A0FF&quot;, &quot;#A2A2A2FF&quot;, &quot;#A3A3A3FF&quot;, &quot;#A5A5A5FF&quot;, &quot;#A7A7A7FF&quot;, &quot;#A9A9A9FF&quot;, &quot;#AAAAAAFF&quot;, &quot;#ACACACFF&quot;, &quot;#AEAEAEFF&quot;, &quot;#AFAFAFFF&quot;, &quot;#B1B1B1FF&quot;, &quot;#B3B3B3FF&quot;, &quot;#B4B4B4FF&quot;, &quot;#B6B6B6FF&quot;, &quot;#B7B7B7FF&quot;, &quot;#B9B9B9FF&quot;, &quot;#BBBBBBFF&quot;, &quot;#BCBCBCFF&quot;, &quot;#BEBEBEFF&quot;, &quot;#BFBFBFFF&quot;, &quot;#C1C1C1FF&quot;, &quot;#C2C2C2FF&quot;, &quot;#C3C3C4FF&quot;, &quot;#C5C5C5FF&quot;, &quot;#C6C6C6FF&quot;, &quot;#C8C8C8FF&quot;, &quot;#C9C9C9FF&quot;, &quot;#CACACAFF&quot;, &quot;#CCCCCCFF&quot;, &quot;#CDCDCDFF&quot;, &quot;#CECECEFF&quot;, &quot;#CFCFCFFF&quot;, &quot;#D1D1D1FF&quot;,  &quot;#D2D2D2FF&quot;, &quot;#D3D3D3FF&quot;, &quot;#D4D4D4FF&quot;, &quot;#D5D5D5FF&quot;, &quot;#D6D6D6FF&quot;, &quot;#D7D7D7FF&quot;, &quot;#D8D8D8FF&quot;, &quot;#D9D9D9FF&quot;, &quot;#DADADAFF&quot;, &quot;#DBDBDBFF&quot;, &quot;#DCDCDCFF&quot;, &quot;#DDDDDDFF&quot;, &quot;#DEDEDEFF&quot;, &quot;#DEDEDEFF&quot;, &quot;#DFDFDFFF&quot;, &quot;#E0E0E0FF&quot;, &quot;#E0E0E0FF&quot;, &quot;#E1E1E1FF&quot;, &quot;#E1E1E1FF&quot;, &quot;#E2E2E2FF&quot;, &quot;#E2E2E2FF&quot;, &quot;#E2E2E2FF&quot;)
+## alpha     =  0.5
+## cex   =  1
+## itemLabels    =  TRUE
+## labelCol  =  #000000B3
+## measureLabels     =  FALSE
+## precision     =  3
+## layout    =  NULL
+## layoutParams  =  list()
+## arrowSize     =  0.5
+## engine    =  igraph
+## plot  =  TRUE
+## plot_options  =  list()
+## max   =  100
+## verbose   =  FALSE</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-94-3.png" /><!-- --></p>
+<pre class="r"><code># the same but grouped and ordered
+plot(soda_rule, method=&quot;grouped&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-94-4.png" /><!-- --></p>
+<p><br></p>
+</div>
+<div id="mining-frequent-itemsets-with-eclat" class="section level1">
+<h1><span class="header-section-number">6</span> Mining frequent itemsets with Eclat</h1>
+<p><img src="images/5.PNG" width="720" /><img src="images/6.PNG" width="660" /></p>
+<pre class="r"><code>frequentsets=eclat(Groceries,parameter=list(support=0.05,maxlen=10))</code></pre>
+<pre><code>## Eclat
+## 
+## parameter specification:
+##  tidLists support minlen maxlen            target   ext
+##     FALSE    0.05      1     10 frequent itemsets FALSE
+## 
+## algorithmic control:
+##  sparse sort verbose
+##       7   -2    TRUE
+## 
+## Absolute minimum support count: 491 
+## 
+## create itemset ... 
+## set transactions ...[169 item(s), 9835 transaction(s)] done [0.01s].
+## sorting and recoding items ... [28 item(s)] done [0.00s].
+## creating sparse bit matrix ... [28 row(s), 9835 column(s)] done [0.05s].
+## writing  ... [31 set(s)] done [0.00s].
+## Creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>summary(frequentsets)</code></pre>
+<pre><code>## set of 31 itemsets
+## 
+## most frequent items:
+##       whole milk other vegetables           yogurt       rolls/buns      frankfurter          (Other) 
+##                4                2                2                2                1               23 
+## 
+## element (itemset/transaction) length distribution:sizes
+##  1  2 
+## 28  3 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   1.000   1.000   1.000   1.097   1.000   2.000 
+## 
+## summary of quality measures:
+##     support            count       
+##  Min.   :0.05236   Min.   : 515.0  
+##  1st Qu.:0.05831   1st Qu.: 573.5  
+##  Median :0.07565   Median : 744.0  
+##  Mean   :0.09212   Mean   : 906.0  
+##  3rd Qu.:0.10173   3rd Qu.:1000.5  
+##  Max.   :0.25552   Max.   :2513.0  
+## 
+## includes transaction ID lists: FALSE 
+## 
+## mining info:
+##       data ntransactions support
+##  Groceries          9835    0.05</code></pre>
+<pre class="r"><code>inspect(sort(frequentsets,by=&quot;support&quot;)[1:10])</code></pre>
+<pre><code>##      items              support    count
+## [1]  {whole milk}       0.25551601 2513 
+## [2]  {other vegetables} 0.19349263 1903 
+## [3]  {rolls/buns}       0.18393493 1809 
+## [4]  {soda}             0.17437722 1715 
+## [5]  {yogurt}           0.13950178 1372 
+## [6]  {bottled water}    0.11052364 1087 
+## [7]  {root vegetables}  0.10899847 1072 
+## [8]  {tropical fruit}   0.10493137 1032 
+## [9]  {shopping bags}    0.09852567  969 
+## [10] {sausage}          0.09395018  924</code></pre>
+<p><br></p>
+</div>
+<div id="creating-transactions-with-temporal-information" class="section level1">
+<h1><span class="header-section-number">7</span> Creating transactions with temporal information</h1>
+<pre class="r"><code># install.packages(&quot;arulesSequences&quot;)
+library(arulesSequences)
+
+tmp_data=list(c(&quot;A&quot;),
+               c(&quot;A&quot;,&quot;B&quot;,&quot;C&quot;),
+               c(&quot;A&quot;,&quot;C&quot;),
+               c(&quot;D&quot;),
+               c(&quot;C&quot;,&quot;F&quot;),
+               c(&quot;A&quot;,&quot;D&quot;),
+               c(&quot;C&quot;),
+               c(&quot;B&quot;,&quot;C&quot;),
+               c(&quot;A&quot;,&quot;E&quot;),
+               c(&quot;E&quot;,&quot;F&quot;),
+               c(&quot;A&quot;,&quot;B&quot;),
+               c(&quot;D&quot;,&quot;F&quot;),
+               c(&quot;C&quot;),
+               c(&quot;B&quot;),
+               c(&quot;E&quot;),
+               c(&quot;G&quot;),
+               c(&quot;A&quot;,&quot;F&quot;),
+               c(&quot;C&quot;),
+               c(&quot;B&quot;),
+               c(&quot;C&quot;))
+
+names(tmp_data) = paste(&quot;Tr&quot;,c(1:20), sep = &quot;&quot;)
+trans = as(tmp_data,&quot;transactions&quot;)
+transactionInfo(trans)$sequenceID = c(1,1,1,1,1,2,2,2,2,3,3,3,3,3,4,4,4,4,4,4)
+transactionInfo(trans)$eventID=c(10,20,30,40,50,10,20,30,40,10,20
+                                  ,30,40,50,10,20,30,40,50,60)
+trans</code></pre>
+<pre><code>## transactions in sparse format with
+##  20 transactions (rows) and
+##  7 items (columns)</code></pre>
+<pre class="r"><code>inspect(head(trans))</code></pre>
+<pre><code>##     items   transactionID sequenceID eventID
+## [1] {A}     Tr1           1          10     
+## [2] {A,B,C} Tr2           1          20     
+## [3] {A,C}   Tr3           1          30     
+## [4] {D}     Tr4           1          40     
+## [5] {C,F}   Tr5           1          50     
+## [6] {A,D}   Tr6           2          10</code></pre>
+<pre class="r"><code>summary(trans)</code></pre>
+<pre><code>## transactions as itemMatrix in sparse format with
+##  20 rows (elements/itemsets/transactions) and
+##  7 columns (items) and a density of 0.2214286 
+## 
+## most frequent items:
+##       C       A       B       F       D (Other) 
+##       8       7       5       4       3       4 
+## 
+## element (itemset/transaction) length distribution:
+## sizes
+##  1  2  3 
+## 10  9  1 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1.00    1.00    1.50    1.55    2.00    3.00 
+## 
+## includes extended item information - examples:
+##   labels
+## 1      A
+## 2      B
+## 3      C
+## 
+## includes extended transaction information - examples:
+##   transactionID sequenceID eventID
+## 1           Tr1          1      10
+## 2           Tr2          1      20
+## 3           Tr3          1      30</code></pre>
+<pre class="r"><code>zaki=read_baskets(con = system.file(&quot;misc&quot;, &quot;zaki.txt&quot;,
+                 package= &quot;arulesSequences&quot;), info = c(&quot;sequenceID&quot;,&quot;eventID&quot;,&quot;SIZE&quot;))
+as(zaki, &quot;data.frame&quot;)</code></pre>
+<pre><code>##        items sequenceID eventID SIZE
+## 1      {C,D}          1      10    2
+## 2    {A,B,C}          1      15    3
+## 3    {A,B,F}          1      20    3
+## 4  {A,C,D,F}          1      25    4
+## 5    {A,B,F}          2      15    3
+## 6        {E}          2      20    1
+## 7    {A,B,F}          3      10    3
+## 8    {D,G,H}          4      10    3
+## 9      {B,F}          4      20    2
+## 10   {A,G,H}          4      25    3</code></pre>
+<p><br></p>
+</div>
+<div id="mining-frequent-sequential-patterns-with-cspade" class="section level1">
+<h1><span class="header-section-number">8</span> Mining frequent sequential patterns with cSPADE</h1>
+<p><img src="images/7.PNG" width="739" /><img src="images/8.PNG" width="582" /></p>
+<pre class="r"><code>s_result=cspade(trans,parameter = list(support = 0.75),
+                control = list(verbose = TRUE))</code></pre>
+<pre><code>## 
+## parameter specification:
+## support : 0.75
+## maxsize :   10
+## maxlen  :   10
+## 
+## algorithmic control:
+## bfstype  : FALSE
+## verbose  :  TRUE
+## summary  : FALSE
+## tidLists : FALSE
+## 
+## preprocessing ... 1 partition(s), 0 MB [1.2s]
+## mining transactions ... 0 MB [0.23s]
+## reading sequences ... [0.1s]
+## 
+## total elapsed time: 1.53s</code></pre>
+<pre class="r"><code>summary(s_result)</code></pre>
+<pre><code>## set of 14 sequences with
+## 
+## most frequent items:
+##       C       A       B       D       E (Other) 
+##       8       5       5       2       1       1 
+## 
+## most frequent elements:
+##     {C}     {A}     {B}     {D}     {E} (Other) 
+##       8       5       5       2       1       1 
+## 
+## element (sequence) size distribution:
+## sizes
+## 1 2 3 
+## 6 6 2 
+## 
+## sequence length distribution:
+## lengths
+## 1 2 3 
+## 6 6 2 
+## 
+## summary of quality measures:
+##     support      
+##  Min.   :0.7500  
+##  1st Qu.:0.7500  
+##  Median :0.7500  
+##  Mean   :0.8393  
+##  3rd Qu.:1.0000  
+##  Max.   :1.0000  
+## 
+## includes transaction ID lists: FALSE 
+## 
+## mining info:
+##   data ntransactions nsequences support
+##  trans            20          4    0.75</code></pre>
+<pre class="r"><code>as(s_result, &quot;data.frame&quot;)</code></pre>
+<pre><code>##         sequence support
+## 1          &lt;{A}&gt;    1.00
+## 2          &lt;{B}&gt;    1.00
+## 3          &lt;{C}&gt;    1.00
+## 4          &lt;{D}&gt;    0.75
+## 5          &lt;{E}&gt;    0.75
+## 6          &lt;{F}&gt;    0.75
+## 7      &lt;{A},{C}&gt;    1.00
+## 8      &lt;{B},{C}&gt;    0.75
+## 9      &lt;{C},{C}&gt;    0.75
+## 10     &lt;{D},{C}&gt;    0.75
+## 11 &lt;{A},{C},{C}&gt;    0.75
+## 12     &lt;{A},{B}&gt;    1.00
+## 13     &lt;{C},{B}&gt;    0.75
+## 14 &lt;{A},{C},{B}&gt;    0.75</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
